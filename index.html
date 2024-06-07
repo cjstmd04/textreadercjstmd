@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>텍스트 뤼더</title>
+    <style>
+        body {
+            font-family: Malgun Gothic, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 11px;
+        }
+        #textArea {
+            width: 80%;
+            height: 100px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        #readerInfo {
+            font-size: 0.8em; /* 작은 글씨 크기 */
+            opacity: 0.66; /* 투명도 설정 */
+            margin-bottom: 10px; /* textArea와 간격 조정 */
+        }
+        #output {
+            margin-top: 20px;
+            font-size: 2.4em;
+            font-weight: 400;
+        }
+        .highlight {
+            background-color: yellow;
+        }
+        .button-container {
+            margin-top: 10px;
+        }
+        .slider-container {
+            margin-top: 20px;
+            width: 80%;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div id="readerInfo">
+        It's text reader! more information: 
+        <a href="https://blog.naver.com/cjstmd2004" target="_blank">https://blog.naver.com/cjstmd2004</a>
+    </div>
+    <div id="textArea" contenteditable="true"></div>
+    <div class="button-container">
+        <button id="startButton" onclick="startReading()">시작</button>
+        <button id="pauseButton" onclick="togglePause()" style="display: none;">일시정지</button>
+    </div>
+    <div id="output"></div>
+    <div class="slider-container">
+        <label for="speedSlider">속도:</label>
+        <input type="range" id="speedSlider" min="100" max="1000" step="50" value="300" onchange="updateSpeed()">
+        <label for="sizeSlider">크기:</label>
+        <input type="range" id="sizeSlider" min="2" max="5" step="0.1" value="2" onchange="updateSize()">
+    </div>
+
+    <div id="numberedOutputContainer" style="margin-top: 20px;">
+        <h2>숫자 메모장</h2>
+        <ul id="numberedOutputList"></ul>
+    </div>
+
+    <script>
+        let timer;
+        let index = 0;
+        let words = [];
+        let speed = 300; // 기본값은 300 밀리초
+        let size = 2; // 기본값은 2
+        let numberedOutputs = []; // 숫자가 포함된 output을 저장할 배열
+
+        function startReading() {
+            clearInterval(timer);
+            const text = document.getElementById('textArea').innerText;
+            words = text.split(' ');
+            index = 0; // 텍스트 처음부터 시작
+            document.getElementById('pauseButton').style.display = 'inline';
+            document.getElementById('pauseButton').textContent = '일시정지';
+            readText();
+        }
+
+        function readText() {
+            const output = document.getElementById('output');
+            timer = setInterval(() => {
+                if (index < words.length) {
+                    const highlightedText = words.map((word, i) => {
+                        return i === index ? `<span class="highlight">${word}</span>` : word;
+                    }).join(' ');
+
+                    document.getElementById('textArea').innerHTML = highlightedText;
+                    output.textContent = words[index++];
+
+                    // 숫자 포함 여부 확인
+                    if (/\d+/.test(output.textContent)) {
+                        numberedOutputs.push(output.textContent); // 숫자가 포함된 output 저장
+                        updateNumberedOutputList(); // 목록 업데이트
+                    }
+                } else {
+                    clearInterval(timer);
+                }
+            }, speed); // 슬라이더 값으로 변경
+        }
+
+        function togglePause() {
+            const pauseButton = document.getElementById('pauseButton');
+            if (pauseButton.textContent === "일시정지") {
+                clearInterval(timer);
+                pauseButton.textContent = "킵고잉";
+            } else {
+                readText();
+                pauseButton.textContent = "일시정지";
+            }
+        }
+
+        function updateSpeed() {
+            speed = document.getElementById('speedSlider').value;
+            clearInterval(timer);
+            readText();
+        }
+
+        function updateSize() {
+            size = document.getElementById('sizeSlider').value;
+            document.getElementById('output').style.fontSize = size + 'em';
+        }
+
+        function updateNumberedOutputList() {
+            const numberedOutputList = document.getElementById('numberedOutputList');
+            numberedOutputList.innerHTML = ''; // 목록 초기화
+
+            numberedOutputs.forEach(output => {
+                const listItem = document.createElement('li');
+                listItem.textContent = output;
+                numberedOutputList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>
